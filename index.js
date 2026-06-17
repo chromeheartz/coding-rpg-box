@@ -207,25 +207,25 @@ function buildCard(s) {
   const { level, progress } = levelInfo(s.commits);
   const title = titleFor(s);
   const classEmoji = classFor(s).split(" ")[0];
-  const fixPct = Math.round(s.fixRatio * 100);
   const expPct = Math.round(progress * 100);
 
-  // 핀에 보이는 파란 헤더
-  const header = `🎮 Lv.${level} ${title} ${classEmoji} · EXP ${expPct}%`;
+  // 핀에 보이는 파란 헤더 (짧게 — 잘림 방지)
+  const header = `🎮 Lv.${level} ${title} ${classEmoji}`;
 
+  // [이모지, 라벨, 값, 막대비율, 막대뒤 접미사]
+  // commits 막대는 EXP(레벨 진행도) — 레벨업하면 다시 차오름
   const rows = [
-    ["⚔️", "commits", String(s.commits), norm(s.commits, 2000)],
-    ["🛡️", "PRs", String(s.prsMerged), norm(s.prsMerged, 200)],
-    ["✨", "langs", String(s.languages), norm(s.languages, 12)],
-    ["🔥", "streak", `${s.currentStreak}d`, norm(s.currentStreak, 30)],
-    ["💀", "fix%", `${fixPct}%`, s.fixRatio],
+    ["⚔️", "commits", String(s.commits), progress, ` ${expPct}%`],
+    ["✨", "langs", String(s.languages), norm(s.languages, 12), ""],
+    ["🔥", "streak", `${s.currentStreak}d`, norm(s.currentStreak, 30), ""],
+    ["🏆", "best", `${s.longestStreak}d`, norm(s.longestStreak, 60), ""],
   ];
 
   // 이모지는 JS 길이가 제각각이라(✨=1, ⚔️=2) 패딩은 ASCII 라벨에만 적용
   const content = rows
-    .map(([emoji, label, val, ratio]) => {
+    .map(([emoji, label, val, ratio, suffix]) => {
       const value = val.padStart(6);
-      return `${emoji} ${label.padEnd(8)}${value}  ${bar(ratio, 14)}`;
+      return `${emoji} ${label.padEnd(8)}${value}  ${bar(ratio, 12)}${suffix}`;
     })
     .join("\n");
 
