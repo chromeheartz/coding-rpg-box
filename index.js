@@ -200,37 +200,36 @@ function bar(ratio, width = 20) {
 // 스탯 값을 0~1로 정규화해 막대로 (상한선은 적당히)
 const norm = (val, max) => Math.min(val / max, 1);
 
+// GitHub 핀 박스는 Gist 내용의 첫 5~6줄만 보여주므로:
+//   - 레벨 / EXP / 칭호 / 직업 → 파란 헤더(=파일명)로
+//   - 본문 → 스탯 5줄만 (빈 줄·구분선 없이)
 function buildCard(s) {
-  const { level, progress, toNext } = levelInfo(s.commits);
+  const { level, progress } = levelInfo(s.commits);
   const title = titleFor(s);
-  const cls = classFor(s);
+  const classEmoji = classFor(s).split(" ")[0];
   const fixPct = Math.round(s.fixRatio * 100);
+  const expPct = Math.round(progress * 100);
+
+  // 핀에 보이는 파란 헤더
+  const header = `🎮 Lv.${level} ${title} ${classEmoji} · EXP ${expPct}%`;
 
   const rows = [
-    ["⚔️", "ATK", "commits", s.commits, norm(s.commits, 2000)],
-    ["🛡️", "DEF", "PRs merged", s.prsMerged, norm(s.prsMerged, 200)],
-    ["✨", "INT", "languages", s.languages, norm(s.languages, 12)],
-    ["🔥", "STR", "streak", `${s.currentStreak}d`, norm(s.currentStreak, 30)],
-    ["💀", "LCK", "fix %", `${fixPct}%`, s.fixRatio],
+    ["⚔️", "commits", String(s.commits), norm(s.commits, 2000)],
+    ["🛡️", "PRs", String(s.prsMerged), norm(s.prsMerged, 200)],
+    ["✨", "langs", String(s.languages), norm(s.languages, 12)],
+    ["🔥", "streak", `${s.currentStreak}d`, norm(s.currentStreak, 30)],
+    ["💀", "fix%", `${fixPct}%`, s.fixRatio],
   ];
 
-  const lines = [];
-  lines.push(`🎮 ${s.login}.exe  —  Lv.${level}  ${cls}`);
-  lines.push("─".repeat(46));
-  lines.push(
-    `  EXP  ${bar(progress)}  ${Math.round(progress * 100)}%  (다음까지 ${toNext})`
-  );
-  lines.push("");
-  for (const [emoji, stat, label, val, ratio] of rows) {
-    const left = `  ${emoji}  ${stat}  ${label}`.padEnd(22);
-    const value = String(val).padStart(6);
-    lines.push(`${left}${value}   ${bar(ratio, 12)}`);
-  }
-  lines.push("");
-  lines.push(`  🏅 Title: "${title}"`);
-  lines.push(`  ⭐ Stars earned: ${s.stars}   ·   🏆 Best streak: ${s.longestStreak}d`);
+  // 이모지는 JS 길이가 제각각이라(✨=1, ⚔️=2) 패딩은 ASCII 라벨에만 적용
+  const content = rows
+    .map(([emoji, label, val, ratio]) => {
+      const value = val.padStart(6);
+      return `${emoji} ${label.padEnd(8)}${value}  ${bar(ratio, 14)}`;
+    })
+    .join("\n");
 
-  return lines.join("\n");
+  return { title: header, content };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -275,8 +274,7 @@ function mockStats() {
 
 async function main() {
   const stats = process.env.DEMO ? mockStats() : await fetchStats();
-  const content = buildCard(stats);
-  const title = `🎮 ${stats.login}'s dev stats`;
+  const { title, content } = buildCard(stats);
 
   console.log(title);
   console.log(content);
