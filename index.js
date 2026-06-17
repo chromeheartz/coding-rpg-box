@@ -200,17 +200,14 @@ function bar(ratio, width = 20) {
 // 스탯 값을 0~1로 정규화해 막대로 (상한선은 적당히)
 const norm = (val, max) => Math.min(val / max, 1);
 
-// GitHub 핀 박스는 Gist 내용의 첫 5~6줄만 보여주므로:
-//   - 레벨 / EXP / 칭호 / 직업 → 파란 헤더(=파일명)로
-//   - 본문 → 스탯 5줄만 (빈 줄·구분선 없이)
+// GitHub 핀은 파일명(헤더)을 캐싱해 잘 안 바뀌므로,
+// 레벨/칭호는 "본문 첫 줄"에 넣어 매번 확실히 갱신되게 한다.
+// 본문은 첫 5~6줄만 보이므로 제목줄 + 스탯 4줄 = 5줄로 맞춤.
 function buildCard(s) {
   const { level, progress } = levelInfo(s.commits);
   const title = titleFor(s);
   const classEmoji = classFor(s).split(" ")[0];
   const expPct = Math.round(progress * 100);
-
-  // 핀에 보이는 파란 헤더 (짧게 — 잘림 방지)
-  const header = `🎮 Lv.${level} ${title} ${classEmoji}`;
 
   // [이모지, 라벨, 값, 막대비율, 막대뒤 접미사]
   // commits 막대는 EXP(레벨 진행도) — 레벨업하면 다시 차오름
@@ -222,14 +219,18 @@ function buildCard(s) {
   ];
 
   // 이모지는 JS 길이가 제각각이라(✨=1, ⚔️=2) 패딩은 ASCII 라벨에만 적용
-  const content = rows
-    .map(([emoji, label, val, ratio, suffix]) => {
-      const value = val.padStart(6);
-      return `${emoji} ${label.padEnd(8)}${value}  ${bar(ratio, 12)}${suffix}`;
-    })
-    .join("\n");
+  const statLines = rows.map(([emoji, label, val, ratio, suffix]) => {
+    const value = val.padStart(6);
+    return `${emoji} ${label.padEnd(8)}${value}  ${bar(ratio, 12)}${suffix}`;
+  });
 
-  return { title: header, content };
+  // 본문 첫 줄 = 레벨/칭호/직업 (핀에서 헤더 역할)
+  const content = [`🎮 Lv.${level}  ${title} ${classEmoji}`, ...statLines].join(
+    "\n"
+  );
+
+  // 파일명(파란 헤더)은 고정 라벨로 유지
+  return { title: "🎮 dev-stats", content };
 }
 
 // ─────────────────────────────────────────────────────────────
