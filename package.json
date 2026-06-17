@@ -1,0 +1,13 @@
+{
+  "name": "coding-rpg-box",
+  "version": "1.0.0",
+  "description": "Turn your GitHub activity into an RPG character stat card, pinned to your profile.",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
